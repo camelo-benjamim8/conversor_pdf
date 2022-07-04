@@ -16,11 +16,11 @@
     {% include 'base/base.html' %}
     <div class="container">
         
-        <h1 class="text-center my-2">Convert to pdf</h1>
+        <h1 class="text-center my-2">Convert img to pdf</h1>
         <div class="container-sm text-center">
             <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
-                    <input type="file" name="upload" accept=".doc, .docx, .pdf, .txt,.png,.jpg,.jpeg," class="my-2 bg-light" multiple="multiple">
+                    <input type="file" name="upload" accept=".png,.jpg,.jpeg," class="my-2 bg-light" multiple="multiple">
                     <br>
                     <button class="btn btn-dark my-4" type="submit">Converter para pdf</button>
             </form>

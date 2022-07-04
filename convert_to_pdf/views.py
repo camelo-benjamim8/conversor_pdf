@@ -9,13 +9,12 @@ import os
 from string import ascii_letters, digits
 import random
 import datetime
+from datetime import timedelta as td
 from PyPDF2 import PdfFileReader, PdfFileMerger
 from django.conf import settings
 from convert_to_pdf.models import FileDelete
-import pypandoc
-from docx2pdf import convert
-from django.core.files.storage import default_storage
-
+from django.core.files import File
+from dateutil import parser
 # Create your views here.
 def converter_pdf(request):
     current_year = datetime.datetime.now().year
@@ -23,13 +22,15 @@ def converter_pdf(request):
     all_files = FileDelete.objects.all()
     for i in all_files:
         try:
-            filename_deletation_before_execution = i.filename
-            ##deleting file from media root
-            os.remove(os.path.join(settings.MEDIA_ROOT, filename_deletation_before_execution))
-            ##deleting instruction for delete in database
-            FileDelete.objects.delete(filename=filename_deletation_before_execution)
-        except:
-            pass
+            data_comparar = parser.parse(i.data_deletar)
+            if datetime.datetime.now() > data_comparar:
+                filename_deletation_before_execution = i.filename
+                ##deleting file from media root
+                os.remove(os.path.join(settings.MEDIA_ROOT, filename_deletation_before_execution))
+                ##deleting instruction for delete in database
+                FileDelete.objects.delete(filename=filename_deletation_before_execution)
+        except Exception as e:
+            print(e)
     if request.method == 'GET':
         context = {'year': str(current_year)}
     else:
@@ -96,19 +97,19 @@ def converter_pdf(request):
             if case == 0:
                 response = os.path.join(settings.MEDIA_ROOT, str(request.session['pseudorandomic_pdf_name']) +'.pdf')
                 filename_query = str(request.session['pseudorandomic_pdf_name']) +'.pdf'
-                obj = FileDelete.objects.create(filename=filename_query)
+                data_deletar = datetime.datetime.now() + td(seconds=30)
+                obj = FileDelete.objects.create(filename=filename_query,data_deletar=str(data_deletar))
                 obj.save()
                 return FileResponse(open(response,'rb'),content_type='application/pdf')
                 
             else:
                 response = os.path.join(settings.MEDIA_ROOT,'merged_' + str(request.session['pseudorandomic_pdf_name']) +'.pdf')
                 filename_query = 'merged_' + str(request.session['pseudorandomic_pdf_name']) +'.pdf'
+                data_deletar = datetime.datetime.now() + td(seconds=30,data_deletar=str(data_deletar))
                 obj = FileDelete.objects.create(filename=filename_query)
                 obj.save()
                 return FileResponse(open(response,'rb'),content_type='application/pdf')
 
          except:
-         ## convert .doc .docx and anothers to pdf
             pass
-   
     return render(request,'conversor_pdf/convert_pdf.html',context=context) 
